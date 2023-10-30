@@ -1,69 +1,110 @@
 {% extends "restaurant_menu_app/base.html" %}
-{% load static %} 
+{% load static %}
 
 {% block content %}
-<h1 class="title has-text-centered w3-card w3-text-white mt-3">Restaurant Menu</h1>
-<div class="container menu-list">
-
-  {% for category in categories %}
-  {% if category.items.all %}
-    <div class="card mb-3">
-      {% if category.image %}
-        <img src="{{ category.image.url }}" class="card-img-top image-fluid" alt="hero image" style="height:50vh;">
-      {% endif %}
-      <div class="card-body">
-        <h5 class="card-title has-text-centered title">{{ category.name }}</h5>
-        <div class="row row-cols-1 row-cols-md-2 g-4">
-          {% for item in category.items.all %}
-            <div class="col">
-              <div class="card mb-3" style="max-width: 540px;">
-                <div class="row g-0">
-                  <div class="col-md-4">
-                    {% if item.image %}
-                      <img src="{{ item.image.url }}" class="img-fluid rounded-start" alt="{{ item.name }}">
-                    {% endif %}
-                  </div>
-                  <div class="col-md-8">
-                    <div class="card-body">
-                      <h5 class="card-title subtitle"><strong>{{ item.name }}</strong></h5>
-                      <p class="card-text lead">{{ item.description }}</p>
-                      <div class="d-grid gap-2 d-md-block mt-3 is-flex">
-                        <a href="{% url 'restaurant_menu_app:edit_menu_item' item.id %}">
-                          <button class="btn btn-primary" type="button">Edit</button>
-                        </a>
-                        <a href="{% url 'restaurant_menu_app:remove_menu_item' item.id %}">
-                          <button class="btn btn-danger" type="button">Delete</button>
-                        </a>
+  <h1 class="title has-text-centered w3-card w3-text-white mt-3">Restaurant Menu</h1>
+  <div class="container menu-list">
+    {% for category in categories %}
+      {% if category.items.all %}
+        <div class="card mb-3">
+          {% if category.image %}
+            <img src="{{ category.image.url }}" class="card-img-top image-fluid" alt="hero image" style="height:50vh;">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title has-text-centered title">{{ category.name }}</h5>
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+              {% for item in category.items.all %}
+                <div class="col">
+                  <div class="card mb-3" style="max-width: 540px;">
+                    <div class="row g-0">
+                      <div class="col-md-4">
+                        {% if item.image %}
+                          <img src="{{ item.image.url }}" class="img-fluid rounded-start" alt="{{ item.name }}">
+                        {% endif %}
+                      </div>
+                      <div class="col-md-8">
+                        <div class="card-body">
+                          <h5 class="card-title subtitle"><strong>{{ item.name }}</strong></h5>
+                          <p class="card-text lead">{{ item.description }}</p>
+                          <div class="d-grid gap-2 d-md-block mt-3 is-flex">
+                            <a href="{% url 'restaurant_menu_app:edit_menu_item' item.id %}" class="btn btn-primary action-button">
+                              <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button class="btn btn-danger action-button delete-button" data-url="{% url 'restaurant_menu_app:remove_menu_item' item.id %}">
+                              <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                            <button class="btn btn-primary action-button view-product" data-name="{{ item.name }}" data-description="{{ item.description }}">
+                              <i class="fas fa-eye"></i> View Product
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              {% endfor %}
             </div>
-          {% endfor %}
+            <div class="d-grid">
+              <a href="{% url 'restaurant_menu_app:add_menu_item' %}" class="btn text-bg-primary p-3 w3-round">Add Item</a>
+            </div>
+          </div>
         </div>
-        <div class="d-grid">
-          <a href="{% url 'restaurant_menu_app:add_menu_item' %}" class="btn text-bg-primary p-3 w3-round">Add Item</a>
+      {% else %}
+        <div class="card mb-4">
+          <div class="card-header title">
+            <strong>Add Item to the Order Menu</strong>
+          </div>
+          <div class="card-body">
+            <div class="d-grid">
+              <a href="{% url 'restaurant_menu_app:add_menu_item' %}" class="btn text-bg-info p-3 w3-round subtitle">
+                Add Item from {{ category.name }} category
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Modal for viewing product details -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <p id="productModalName"></p>
+      <p id="productModalDescription"></p>
     </div>
-  {% else %}
-    <div class="card mb-4">
-      <div class="card-header title">
-        <strong>Add Item to the Order Menu</strong>
-      </div>
-      <div class="card-body">
-        <div class="d-grid">
-          <a href="{% url 'restaurant_menu_app:add_menu_item' %}" class="btn text-bg-info p-3 w3-round subtitle">
-            Add Item from {{ category.name }} category
-          </a>
-        </div>
-      </div>
-    </div>
-  {% endif %}
-{% endfor %}
+  </div>
 
+  <script>
+    document.querySelectorAll('.delete-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const url = button.getAttribute('data-url');
+        if (confirm('Are you sure you want to delete this item?')) {
+          window.location.href = url;
+        }
+      });
+    });
 
+    // Open the modal when "View Product" is clicked
+    document.querySelectorAll('.view-product').forEach(button => {
+      button.addEventListener('click', () => {
+        const name = button.getAttribute('data-name');
+        const description = button.getAttribute('data-description');
+        const productModal = document.getElementById('productModal');
+        const productModalName = document.getElementById('productModalName');
+        const productModalDescription = document.getElementById('productModalDescription');
 
+        productModalName.innerText = `Name: ${name}`;
+        productModalDescription.innerText = `Description: ${description}`;
+        productModal.style.display = 'block';
+      });
+    });
 
+    // Close the modal when the close button is clicked
+    const closeModal = document.getElementById('closeModal');
+    closeModal.addEventListener('click', () => {
+      const productModal = document.getElementById('productModal');
+      productModal.style.display = 'none';
+    });
+  </script>
 {% endblock %}
